@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ToDo from './ToDo';
 import ToDoForm from './ToDoForm';
+import useCountIncompleteToDos from '../hooks/useCountIncompleteToDos';
 
 let ToDos = [
   {tdid: 1, complete: true, completedOn: "today", visible: true, toDoText: "make an app", added: "10/10/10 10:10:10"},
@@ -100,8 +101,6 @@ export const ToDoList = () => {
     const filteredstufftodo = tempstufftodo.filter((todo) => todo.tdid != tdid);
     console.log(filteredstufftodo);
     setstuffToDo([...filteredstufftodo]);
-    // const newstuff = removeEmpties(stufftodo);
-    // setstuffToDo(newstuff);
     console.log(stufftodo);
   };
 
@@ -143,6 +142,18 @@ export const ToDoList = () => {
     return highest;
   }
 
+  //this is my custom hook that counts the incomplete todos
+  //Its basically just a util function prepended with 'use'
+  //custom hooks can also call other hooks, though each call has its own state
+  //so state wont carry over between calls
+  const incomplete = useCountIncompleteToDos(stufftodo);
+
+  // this 'useEffect' hook takes a callback and fires it after the render is complete.
+  // kind of like the componentDidUpdate lifecycle method
+  useEffect(() => {
+    document.title = 'My List - ' + incomplete + ' To-Dos';
+  });
+
   return (
     <ToDoListStyled>
       <ListHeader>
@@ -161,6 +172,8 @@ export const ToDoList = () => {
         </span>
       </ListHeader>
       <ToDoForm lastId={getHighestTdid()} addToDo={addToDo}/>
+      <span>{incomplete} Incomplete To-Dos</span>
+      <br/>
       {generateToDos(stufftodo)}
     </ToDoListStyled>
   );
