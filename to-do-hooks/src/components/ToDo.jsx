@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 const ToDoStyled = styled.div`
+  position: relative;
   background: #eee;
   border: darkslategray 1px solid;
   border-radius: 100px;
@@ -30,13 +31,33 @@ const DoneStyle = styled.span`
   color: #33cc77
 `;
 
+const DeleteBtn = styled.span`
+  position: absolute;
+  left: 95%;
+  background: #ff6688;
+  width: 35px;
+  border-radius: 100px;
+  color: #772244;
+  font-size: 2em;
+  cursor: pointer;
+  
+  :hover {
+    background: #772244;
+    color: #ff6688;
+  }
+`;
+
 export const ToDo = (props) => {
-  const {tdid, completedOn, visible, added, toDoText, complete, toggleComplete} = props;
+  const {tdid, completedOn, visible, added, toDoText, complete, toggleComplete, deleteForever} = props;
 
   const handleToDoClick = (tdid, toggleComplete) => {
     console.log('we clicked toggle:' + tdid);
     toggleComplete(tdid);
+  }
 
+  const handleDeleteClick = (e, tdid) => {
+    e.stopPropagation();
+    deleteForever(tdid)
   }
 
   if(visible) {
@@ -61,6 +82,9 @@ export const ToDo = (props) => {
               {toDoText}
             </span>
           }
+          <DeleteBtn onClick={(e) => handleDeleteClick(e, tdid)}>
+            X
+          </DeleteBtn>
         </ToDoStyled>
     );
   }

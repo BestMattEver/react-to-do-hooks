@@ -25,37 +25,94 @@ const ListHeader = styled.div`
   width: 100%;
 `;
 
+const HideCompleteBtn = styled.span`
+  position: absolute;
+  margin: 10px;
+  padding: 5px;
+  float: right;
+  background: #ff6688;
+  border-radius: 100px;
+  color: #772244;
+  font-size: .3em;
+  cursor: pointer;
+  
+  :hover {
+    color: #ff6688;
+    background: #772244;
+  }
+`;
+
+const ShowCompleteBtn = styled.span`
+  position: absolute;
+  margin: 10px;
+  padding: 5px;
+  float: right;
+  background: #33cc77;
+  color: #115511;
+  border-radius: 100px;
+  font-size: .3em;
+  cursor: pointer;
+  
+  :hover {
+    background: #115511;
+    color: #33cc77;
+  }
+`;
+
 export const ToDoList = () => {
   const [stufftodo, setstuffToDo ] = useState(ToDos);
+  const [ completeHidden, setCompleteHidden ] = useState(false);
 
-  const toggleComplete = (tdid) => {
-    let tempToDos = stufftodo;
-    tempToDos[tdid-1].complete = !tempToDos[tdid-1].complete;
-    if(stufftodo[tdid-1].complete){
-      tempToDos[tdid-1].completedOn = new Date().toLocaleString();
-    } else {
-      tempToDos[tdid-1].completedOn = undefined;
-    }
-
-    //for some reason, changing the objects INSIDE the array in state wont trigger an update,
-    // but ADDING an object (empty) to the state array, DOES trigger an update.
-    setstuffToDo([...tempToDos, {}]);
-    // as a result, we have to filter, and REASSIGN to remove the empty objects required for the update.
+  const removeEmpties = (stufftodo) => {
     const newstuff = stufftodo.filter((todo) => {
       if(todo.tdid) {
         return todo;
       }
     });
-    setstuffToDo(newstuff);
+    return newstuff
+  };
 
+  const toggleComplete = (tdid) => {
+    let tempToDos = stufftodo;
+    let toDoInQuestion = tempToDos.filter((todo) => todo.tdid === tdid);
+    toDoInQuestion = toDoInQuestion[0];
+    toDoInQuestion.complete = !toDoInQuestion.complete;
+    if(toDoInQuestion.complete){
+      toDoInQuestion.completedOn = new Date().toLocaleString();
+    } else {
+      toDoInQuestion.completedOn = undefined;
+    }
+    if(completeHidden && toDoInQuestion.complete){
+      toDoInQuestion.visible = false;
+    }
+    //for some reason, changing the objects INSIDE the array in state wont trigger an update,
+    // but ADDING an object (empty) to the state array, DOES trigger an update.
+    setstuffToDo([...tempToDos, {}]);
+    // as a result, we have to filter, and REASSIGN to remove the empty objects required for the update.
+    const newstuff = removeEmpties(stufftodo);
+    setstuffToDo(newstuff);
     console.log(stufftodo);
-  }
+  };
+
+  const deleteForever = (tdid) => {
+    console.log('we deleted forever: ' + tdid);
+    const tempstufftodo = stufftodo;
+    const filteredstufftodo = tempstufftodo.filter((todo) => todo.tdid != tdid);
+    console.log(filteredstufftodo);
+    setstuffToDo([...filteredstufftodo]);
+    // const newstuff = removeEmpties(stufftodo);
+    // setstuffToDo(newstuff);
+    console.log(stufftodo);
+  };
 
   const generateToDos = (toDoData) => {
+    if(toDoData.length == 0){
+      return "No To-Dos. Good job, you go-getter!";
+    }
     return toDoData.map((todo) => {
-      return <ToDo {...todo} toggleComplete={toggleComplete} />
+      return <ToDo {...todo} toggleComplete={toggleComplete} deleteForever={deleteForever}/>
     });
-  }
+  };
 
   const addToDo = (ToDoObj) => {
     const temptodos = ([...stufftodo, ToDoObj]);
@@ -63,10 +120,47 @@ export const ToDoList = () => {
     console.log(stufftodo);
   }
 
+  const toggleShowComplete = () => {
+    let tempToDos = stufftodo;
+    const changedtodos = tempToDos.map((todo) => {
+      if(todo.complete) {
+        todo.visible = !todo.visible;
+      }
+    });
+    setstuffToDo([...changedtodos, {}]);
+    console.log(stufftodo);
+    const newstuff = removeEmpties(stufftodo);
+    setstuffToDo(newstuff);
+    setCompleteHidden(!completeHidden);
+    console.log("complete hidden: " + completeHidden);
+  };
+
+  const getHighestTdid = () => {
+    let highest = 0;
+    for(let i = 0; i < stufftodo.length; i++) {
+      if(stufftodo[i].tdid > highest) {highest = stufftodo[i].tdid}
+    }
+    return highest;
+  }
+
   return (
     <ToDoListStyled>
-      <ListHeader>My List</ListHeader>
-      <ToDoForm lastId={stufftodo.length} addToDo={addToDo}/>
+      <ListHeader>
+        My List
+        <span>
+          {completeHidden
+            ?
+            <ShowCompleteBtn onClick={() => toggleShowComplete()}>
+              Show Completed Tasks
+            </ShowCompleteBtn>
+            :
+            <HideCompleteBtn onClick={() => toggleShowComplete()}>
+              Hide Completed Tasks
+            </HideCompleteBtn>
+          }
+        </span>
+      </ListHeader>
+      <ToDoForm lastId={getHighestTdid()} addToDo={addToDo}/>
       {generateToDos(stufftodo)}
     </ToDoListStyled>
   );
